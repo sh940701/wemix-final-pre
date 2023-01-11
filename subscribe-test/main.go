@@ -14,11 +14,13 @@ import (
     "github.com/ethereum/go-ethereum/common"
     "github.com/ethereum/go-ethereum/core/types"
     "github.com/ethereum/go-ethereum/ethclient"
+	"github.com/sh940701/wemix-final-pre/contract/build"
 	// "github.com/ethereum/go-ethereum/event"
 )
 
 
 func ws(ch chan<- bool) {
+	fmt.Println("start")
 	client, err := ethclient.Dial("wss://ws.test.wemix.com")
 	if err != nil {
 		log.Fatal(err)
@@ -31,15 +33,15 @@ func ws(ch chan<- bool) {
 
 	logs := make(chan types.Log)
 	sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
-	
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for {
 		select {
-		case err := <-sub.Err():
-			fmt.Println(err)
+		case <-sub.Err():
+			fmt.Println("end")
 			ch <- true
 			return
 		case vLog := <-logs:
