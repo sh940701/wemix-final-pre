@@ -22,49 +22,8 @@ import (
 	// "github.com/ethereum/go-ethereum/event"
 )
 
+// draco 컨트랙트를 subscribe하는 함수
 
-func Draco(client *ethclient.Client, ch chan<- bool) {
-	contractAddress := common.HexToAddress("0xcABa419CA2521Cb871401D3D8D91dc253eAA5014")
-	query := ethereum.FilterQuery {
-		Addresses : []common.Address{contractAddress},
-	}
-
-	logs := make(chan types.Log)
-	sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
-
-	contractABI, err := abi.JSON(strings.NewReader(string(test.TestABI)))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for {
-		select {
-		case <-sub.Err():
-			fmt.Println("end")
-			ch <- true
-			return
-
-		case vLog := <-logs:
-			fmt.Println(vLog.BlockHash.Hex())
-			fmt.Println(vLog.BlockNumber)
-			fmt.Println(vLog.TxHash.Hex())
-
-
-			result, err := contractABI.Unpack("log", vLog.Data)
-			if err != nil {
-				log.Fatal(err)
-			}
-			
-			fmt.Println("msg sender: ", result[0])
-			fmt.Println("string a: ", result[1])
-			fmt.Println("string b: ", result[2])
-		}
-	}
-}
 
 func main() {
 	client, err := ethclient.Dial("wss://ws.test.wemix.com")
@@ -72,9 +31,10 @@ func main() {
 		log.Fatal(err)
 	}	
 
-	dCh := make(chan bool, 1)
-	cCh := make(chan bool, 1)
-	Draco(client, dCh)
+	creditCh := make(chan bool, 1)
+	dracoCh := make(chan bool, 1)
+	dexCh := make(chan bool, 1)
+	
 
 	for {
 		select {
