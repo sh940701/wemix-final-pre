@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Credit is ERC20, Ownable {
 
     event Mint(address, uint);
+    event CustomTransfer(address, address, uint);
 
     constructor () ERC20("Credit", "pWEMIX") {}
 
@@ -21,7 +22,7 @@ contract Credit is ERC20, Ownable {
     function transfer(address from, address to, uint amount) external virtual returns (bool) {
         address owner = from;
         _transfer(owner, to, amount);
-        emit Transfer(from, to, amount);
+        emit CustomTransfer(from, to, amount);
         return true;
     }
 }

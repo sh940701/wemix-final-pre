@@ -11,11 +11,10 @@ import (
     "github.com/ethereum/go-ethereum/common"
     "github.com/ethereum/go-ethereum/core/types"
     "github.com/ethereum/go-ethereum/ethclient"
-	"github.com/sh940701/wemix-final-pre/subscribe-test/contract"
 )
 
-func CreditListener(client *ethclient.Client, ch chan<- bool) {
-	contractAddress := common.HexToAddress("0xcABa419CA2521Cb871401D3D8D91dc253eAA5014")
+func CreditListener(address string, client *ethclient.Client, ch chan<- bool) {
+	contractAddress := common.HexToAddress(address)
 	query := ethereum.FilterQuery {
 		Addresses : []common.Address{contractAddress},
 	}
@@ -26,7 +25,7 @@ func CreditListener(client *ethclient.Client, ch chan<- bool) {
 		log.Fatal(err)
 	}
 
-	contractABI, err := abi.JSON(strings.NewReader(string(test.TestABI)))
+	contractABI, err := abi.JSON(strings.NewReader(string(CreditABI)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,24 +37,34 @@ func CreditListener(client *ethclient.Client, ch chan<- bool) {
 	for {
 		select {
 		case <-sub.Err():
-			fmt.Println("end")
 			ch <- true
 			return
 
 		case vLog := <-logs:
-			fmt.Println(vLog.BlockHash.Hex())
-			fmt.Println(vLog.BlockNumber)
-			fmt.Println(vLog.TxHash.Hex())
-
-
-			result, err := contractABI.Unpack("log", vLog.Data)
+			event, err := contractABI.EventByID(vLog.Topics[0])
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println(err)
 			}
-			
-			fmt.Println("msg sender: ", result[0])
-			fmt.Println("string a: ", result[1])
-			fmt.Println("string b: ", result[2])
+			// event log별 핸들링
+			if event.Name == "CustomTransfer" {
+				fmt.Println(vLog.BlockHash.Hex())
+				fmt.Println(vLog.BlockNumber)
+				fmt.Println(vLog.TxHash.Hex())
+
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println(event.Name)
+				// fmt.Println(event.Inputs)
+				
+				result, err := contractABI.Unpack(event.Name, vLog.Data)
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("from: ", result[0])
+				fmt.Println("to: ", result[1])
+				fmt.Println("amount: ", result[2])
+			}
 		}
 	}
 }

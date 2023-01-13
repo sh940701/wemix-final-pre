@@ -6,40 +6,31 @@
 package main
 
 import (
-    "context"
-    "fmt"
-    "log"
-	"strings"
-
-    "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-    "github.com/ethereum/go-ethereum/common"
-    "github.com/ethereum/go-ethereum/core/types"
+	"log"
     "github.com/ethereum/go-ethereum/ethclient"
-	"github.com/sh940701/wemix-final-pre/subscribe-test/contract"
-	// "github.com/mitchellh/mapstructure"
-
-	// "github.com/ethereum/go-ethereum/event"
+	"github.com/sh940701/wemix-final-pre/subscribe-test/credit"
 )
 
 // draco 컨트랙트를 subscribe하는 함수
 
 
 func main() {
+	creditAddr := "0x245A76693a531eA0aeA2b959ca2d6EA477418988"
+
 	client, err := ethclient.Dial("wss://ws.test.wemix.com")
 	if err != nil {
 		log.Fatal(err)
 	}	
 
 	creditCh := make(chan bool, 1)
-	dracoCh := make(chan bool, 1)
-	dexCh := make(chan bool, 1)
-	
+	// dracoCh := make(chan bool, 1)
+	// dexCh := make(chan bool, 1)
+	credit.CreditListener(creditAddr , client, creditCh)
 
 	for {
 		select {
-		case <- dCh:
-			go Draco(client, dCh)
+		case <- creditCh:
+			go credit.CreditListener(creditAddr , client, creditCh)
 		}
 	}
 }
