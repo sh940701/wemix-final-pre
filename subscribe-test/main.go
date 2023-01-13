@@ -9,30 +9,33 @@ import (
     "context"
     "fmt"
     "log"
+	"strings"
 
     "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
     "github.com/ethereum/go-ethereum/common"
     "github.com/ethereum/go-ethereum/core/types"
     "github.com/ethereum/go-ethereum/ethclient"
-	"github.com/sh940701/wemix-final-pre/contract/build"
+	"github.com/sh940701/wemix-final-pre/subscribe-test/contract"
+	// "github.com/mitchellh/mapstructure"
+
 	// "github.com/ethereum/go-ethereum/event"
 )
 
 
-func ws(ch chan<- bool) {
-	fmt.Println("start")
-	client, err := ethclient.Dial("wss://ws.test.wemix.com")
-	if err != nil {
-		log.Fatal(err)
-	}	
-
-	contractAddress := common.HexToAddress("0xE90b6CAe13208F8F27b8699bB0229516267b3f95")
+func Draco(client *ethclient.Client, ch chan<- bool) {
+	contractAddress := common.HexToAddress("0xcABa419CA2521Cb871401D3D8D91dc253eAA5014")
 	query := ethereum.FilterQuery {
 		Addresses : []common.Address{contractAddress},
 	}
 
 	logs := make(chan types.Log)
 	sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
+
+	contractABI, err := abi.JSON(strings.NewReader(string(test.TestABI)))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if err != nil {
 		log.Fatal(err)
@@ -44,20 +47,39 @@ func ws(ch chan<- bool) {
 			fmt.Println("end")
 			ch <- true
 			return
+
 		case vLog := <-logs:
-			fmt.Println(vLog)
+			fmt.Println(vLog.BlockHash.Hex())
+			fmt.Println(vLog.BlockNumber)
+			fmt.Println(vLog.TxHash.Hex())
+
+
+			result, err := contractABI.Unpack("log", vLog.Data)
+			if err != nil {
+				log.Fatal(err)
+			}
+			
+			fmt.Println("msg sender: ", result[0])
+			fmt.Println("string a: ", result[1])
+			fmt.Println("string b: ", result[2])
 		}
 	}
 }
 
 func main() {
-	ch := make(chan bool, 1)
-	ws(ch)
+	client, err := ethclient.Dial("wss://ws.test.wemix.com")
+	if err != nil {
+		log.Fatal(err)
+	}	
+
+	dCh := make(chan bool, 1)
+	cCh := make(chan bool, 1)
+	Draco(client, dCh)
 
 	for {
 		select {
-		case <- ch:
-			go ws(ch)
+		case <- dCh:
+			go Draco(client, dCh)
 		}
 	}
 }
