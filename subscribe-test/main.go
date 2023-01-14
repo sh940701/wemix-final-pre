@@ -15,7 +15,7 @@ import (
 
 
 func main() {
-	creditAddr := "0x245A76693a531eA0aeA2b959ca2d6EA477418988"
+	creditAddr := "0x19528cbaC37523B1ADe6b75f920CcDfAf3048400"
 
 	client, err := ethclient.Dial("wss://ws.test.wemix.com")
 	if err != nil {
